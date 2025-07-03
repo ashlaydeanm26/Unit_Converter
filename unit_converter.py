@@ -1,3 +1,4 @@
+import re
 import streamlit as st
 
 st.set_page_config(page_title="🔁 Google Unit Converter", layout="centered")
@@ -5,6 +6,17 @@ st.title("🔁 Google Unit Converter")
 st.write("Convert values between different units — just like Google!")
 
 # Conversion logic
+def parse_feet_inches(input_str):
+    match = re.match(r"^(\d+)'\s*(\d+)?\"?$", input_str.strip())
+    if match:
+        feet = int(match.group(1))
+        inches = int(match.group(2) or 0)
+        total_feet = feet + (inches / 12)
+        return total_feet
+    else:
+        return float(input_str)
+
+    
 def convert_units(category, from_unit, to_unit, value):
     try:
         value = float(value)
@@ -89,8 +101,12 @@ with col1:
 with col2:
     to_unit = st.selectbox("To Unit", units)
 
-value = st.text_input("Enter Value", placeholder="e.g. 100")
+value = st.text_input("Enter Value", placeholder="e.g. 100 or 5'10\"")
 
-if st.button("Convert"):
-    result = convert_units(category, from_unit, to_unit, value)
-    st.success(f"{value} {from_unit} = {result} {to_unit}")
+if st.button("Convert", key=f"convert_button_{category}_{from_unit}_{to_unit}"):
+    try:
+        parsed_value = parse_feet_inches(value)
+        result = convert_units(category, from_unit, to_unit, parsed_value)
+        st.success(f"{value} {from_unit} = {result} {to_unit}")
+    except:
+        st.error("❌ Invalid input format. Try 100 or 5'10\"")
